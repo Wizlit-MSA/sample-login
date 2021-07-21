@@ -1,24 +1,38 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import Home from "./components/home/Home";
+import Navbar from "./components/misc/Navbar";
+import PrivateRoute from "./components/misc/PrivateRoute";
+import UserDetail from "./components/users/UserDetail";
+import UsersPage from "./components/users/UsersPage";
+import { useKeycloak } from "@react-keycloak/web";
 
 function App() {
+  const { initialized, keycloak } = useKeycloak();
+
+  if (!initialized) {
+    return <div>Loading...</div>;
+  }
+
+  if (keycloak.authenticated) {
+    keycloak.loadUserProfile().then((profile) => {
+      const userId = profile.attributes.userId
+        ? profile.attributes.userId[0]
+        : -1;
+      console.log(userId);
+    });
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Navbar />
+      <Switch>
+        <Route path="/" exact component={Home} />
+        <Route path="/home" exact component={Home} />
+        <PrivateRoute path="/user-service/all" component={UsersPage} />
+        <PrivateRoute path="/user-service/:username" component={UserDetail} />
+      </Switch>
+    </Router>
   );
 }
 
